@@ -28,5 +28,5 @@ schedule.every().sunday.at("00:00").do(Get_number_of_academic_week)
 
 while True:
     schedule.run_pending()
-    time.sleep(1)
+    time.sleep(60) # 1 minute instead of every second
 

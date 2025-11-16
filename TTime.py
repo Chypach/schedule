@@ -1,39 +1,32 @@
 from datetime import datetime, timezone, timedelta
 import datetime
-from zoneinfo import ZoneInfo
 import schedule
 import time
+def Get_number_of_academic_week() -> int:
+    """
 
-w = [("понедельник"), ("вторник"), ("среда"), ("четверг"), ("пятница"), ("суббота"), ("воскресенье"), ("понедельник")]
+    :rtype: int
+    """
+    start_date = date_local
+    if date_local.month < 9:
+        start_date = datetime.date(date_local.year - 1, 9, 1)
+    else:
+        start_date = datetime.date(date_local.year, 9, 1)
+    start_week_monday = start_date - timedelta(days=start_date.weekday())
+    current_week_monday = date_local - timedelta(days=date_local.weekday())
+    weeks_delta = (start_week_monday - current_week_monday).days // 7
+    return 1 if weeks_delta % 2 == 0 else 2
+
+global Number_of_academic_week
 
 Chel = timezone(timedelta(hours=5), "Челябинск")
+date_local = datetime.datetime.now(Chel)
+date_local = datetime.date(date_local.year, date_local.month, date_local.day)
 
-
-dt = datetime.datetime.today()
-print("время сейчас",dt)
-dt = datetime.datetime.now(Chel)
-print("время сейчас",dt)
-print(dt.year, dt.month, dt.day)
-print(dt.hour, dt.minute, dt.second)
-res = datetime.date(dt.year, dt.month, dt.day)
-print("Сегодня", w[res.weekday()])
-print("Завтра", w[res.isoweekday()])
-
-
-def job():
-    global Nomber_of_weak
-    if Nomber_of_weak == 1:
-        Nomber_of_weak += 1
-        print(Nomber_of_weak)
-    elif Nomber_of_weak == 2:
-        Nomber_of_weak -= 1
-        print(Nomber_of_weak)
-
-
-Nomber_of_weak = 2
-schedule.every().seconds.do(job)
-schedule.every().sunday.at("00:00").do(job)
+Number_of_academic_week: int = Get_number_of_academic_week()
+schedule.every().sunday.at("00:00").do(Get_number_of_academic_week)
 
 while True:
     schedule.run_pending()
     time.sleep(1)
+

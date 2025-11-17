@@ -1,5 +1,8 @@
+from datetime import datetime, timezone, timedelta
+import datetime
 import CFG
 import asyncio
+import datetime
 from typing import Optional
 import logging
 import SQL
@@ -17,6 +20,8 @@ import Schedule_1W_1_group
 import Schedule_1W_2_group
 import Schedule_2W_1_group
 import Schedule_2W_2_group
+from TTime import Number_of_academic_week, Get_number_of_academic_week
+
 # Включить отслеживание распределения памяти
 tracemalloc.start()
 
@@ -45,6 +50,24 @@ logging.basicConfig(level=logging.INFO) # Включаем логировани�
 bot = Bot(CFG.BOT_TOKEN) # Объект бота
 dp = Dispatcher() # Диспетчер
 
+def get_schedule(group, day):
+    Chel = timezone(timedelta(hours=5))
+    date = date_local = datetime.datetime.now(Chel).date()
+    Number_of_academic_week = Get_number_of_academic_week(day)
+    match Number_of_academic_week:
+        case 1:
+            if day == 0:
+                schedule = Schedule_1W_1_group.get_schedule_first_week(group, date.weekday())
+            else:
+                date = date + timedelta(days=1)
+                schedule = Schedule_2W_1_group.get_schedule_first_week(group,date.weekday())
+        case 2:
+            if day == 0:
+                schedule = Schedule_2W_1_group.get_schedule_second_week(group, date.weekday())
+            else:
+                date = date + timedelta(days=1)
+                schedule = Schedule_2W_1_group.get_schedule_second_week(group, date.weekday())
+    return schedule
 class NumbersCallbackFactory(CallbackData, prefix="f"):
     action: str
     user_ID: Optional[int] = None
@@ -73,6 +96,17 @@ async def cmd_start(message: types.Message,
     await message.answer("""
     Я бот расписания ПрИ 102, хули глаза вылупил?
         """, reply_markup=builder.as_markup())
+@dp.message(F.text.lower() == "расписание на сегодня")
+async def schedule_today(message: types.Message, state: FSMContext):
+    await state.clear()
+
+    await bot.send_message(message.chat.id, f"{get_schedule(1, 0)}")
+
+@dp.message(F.text.lower() == "расписание на завтра")
+async def schedule_today(message: types.Message, state: FSMContext):
+    await state.clear()
+
+    await bot.send_message(message.chat.id, f"{get_schedule(1, 1)}")
 
 @dp.message(F.text.lower() == "меню")
 async def menu(message: types.Message, state: FSMContext):
@@ -89,14 +123,8 @@ async def menu(message: types.Message, state: FSMContext):
 
 
     await bot.send_message(message.chat.id, """Меню""",reply_markup=builder.as_markup())
-    await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
-@dp.callback_query(NumbersCallbackFactory.filter(F.action == "check_schedule"))
-async def check_schedule(
-        callback: types.CallbackQuery,
-        callback_data: NumbersCallbackFactory
-):
-    None
+
 
 
 @dp.callback_query(NumbersCallbackFactory.filter(F.action == "Next_step"))
@@ -179,8 +207,10 @@ async def process_time(message: types.Message, state: FSMContext):
     await bot.send_message(message.chat.id, "записал тебя в списочек  ̶п̶и̶д̶о̶р̶а̶с̶о̶в̶, но пока только карандашом", reply_markup=keyboard)
     SQL.add_user(message.chat.id, time, group)
 
-
-
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "schedule_today"))
+async def schedule_today(callback_query: types.CallbackQuery, callback_data: NumbersCallbackFactory):
+    await callback_query.answer()
+    await bot.send_message(callback_query.message.chat.id, f"{get_schedule(1, 0)}")
 @dp.callback_query(NumbersCallbackFactory.filter(F.action == "No"))
 async def No(
         callback: types.CallbackQuery,

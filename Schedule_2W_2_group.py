@@ -55,7 +55,7 @@ def Thursday_2():
     ШАЙХУЛЛИНА П.А., АУД. 431	
 6. (16:40 - 18:10)
     """
-
+    return Schedule
 
 def Friday_2():
     Schedule = """
@@ -68,7 +68,7 @@ def Friday_2():
 5. (15:00 - 16:30)
 6. (16:40 - 18:10)
 """
-
+    return Schedule
 def Saturday_2():
     Schedule = """
 1. (8:00 - 9:30)
@@ -80,7 +80,7 @@ def Saturday_2():
 5. (15:00 - 16:30)
 6. (16:40 - 18:10)
 """
-
+    return Schedule
 
 def Sunday_2():
     None

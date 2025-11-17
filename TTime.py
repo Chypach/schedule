@@ -2,12 +2,16 @@ from datetime import datetime, timezone, timedelta
 import datetime
 import schedule
 import time
-def Get_number_of_academic_week() -> int:
+def Get_number_of_academic_week(a) -> int:
     """
 
     :rtype: int
     """
-    start_date = date_local
+    match a:
+        case 0:
+            start_date = date_local
+        case 1:
+            start_date = date_local + timedelta(days=1)
     if date_local.month < 9:
         start_date = datetime.date(date_local.year - 1, 9, 1)
     else:
@@ -23,10 +27,6 @@ Chel = timezone(timedelta(hours=5), "Челябинск")
 date_local = datetime.datetime.now(Chel)
 date_local = datetime.date(date_local.year, date_local.month, date_local.day)
 
-Number_of_academic_week: int = Get_number_of_academic_week()
-schedule.every().sunday.at("00:00").do(Get_number_of_academic_week)
+Number_of_academic_week = Get_number_of_academic_week(0)
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
 

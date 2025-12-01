@@ -13,10 +13,11 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 import tracemalloc
-import Schedule_1W_1_group
-import Schedule_1W_2_group
-import Schedule_2W_1_group
-import Schedule_2W_2_group
+
+import TEST
+import TTime
+from EvenOddWeek import NomOfWeek
+
 # Включить отслеживание распределения памяти
 tracemalloc.start()
 
@@ -35,15 +36,15 @@ tracemalloc.START_FRAMES_COUNT = 10
 
 
 # + добавить БД
-#НУЖНО ДОБАВИТЬ ОЖИДАНИЕ ОТВЕТА!!!!
+# НУЖНО ДОБАВИТЬ ОЖИДАНИЕ ОТВЕТА!!!!
 # смену недели
 # 1-я или 2-я группа англа
 
 
+logging.basicConfig(level=logging.INFO)  # Включаем логирование, чтобы не пропустить важные сообщения
+bot = Bot(CFG.BOT_TOKEN)  # Объект бота
+dp = Dispatcher()  # Диспетчер
 
-logging.basicConfig(level=logging.INFO) # Включаем логирование, чтобы не пропустить важные сообщения
-bot = Bot(CFG.BOT_TOKEN) # Объект бота
-dp = Dispatcher() # Диспетчер
 
 class NumbersCallbackFactory(CallbackData, prefix="f"):
     action: str
@@ -52,44 +53,93 @@ class NumbersCallbackFactory(CallbackData, prefix="f"):
     message_ID: Optional[int] = None
     time: Optional[str] = None
 
-bot.send_message
+
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message,
                     state: FSMContext):
     await state.clear()
 
-
-
     user_ID = message.from_user.id
 
+    try:
+        if SQL.search_lang(user_ID) == "RU":
+            builder = InlineKeyboardBuilder()
+            builder.button(
+                text="Выбрать группу", callback_data=NumbersCallbackFactory(action="Next_step", user_ID=user_ID)
+            )
+            await message.answer("""
+                Привет! Я бот расписания ПрИ-102. Я высылаю расписание по кнопке. Давай выберем твою группу английского.
+                    """, reply_markup=builder.as_markup())
+        elif SQL.search_lang(user_ID) == "EN":
 
-    builder = InlineKeyboardBuilder()
-    builder.button(
-        text="Далее", callback_data=NumbersCallbackFactory(action="Next_step", user_ID=user_ID)
-    )
+            builder = InlineKeyboardBuilder()
+            builder.button(
+                text="Select a group", callback_data=NumbersCallbackFactory(action="EN_Next_step", user_ID=user_ID)
+            )
+            await message.answer("""
+                            Hi! I'm the 102 PR schedule bot. I send the schedule via the button. Let's choose your English group.
+                                """, reply_markup=builder.as_markup())
+    except:
+        SQL.add_user(user_ID, 1, "RU")
 
-    # инлайн кнопка проверить подписку
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text="Выбрать группу", callback_data=NumbersCallbackFactory(action="Next_step", user_ID=user_ID)
+        )
+        await message.answer("""
+                        Привет! Я бот расписания ПрИ-102. Я высылаю расписание по кнопке. Давай выберем твою группу английского.
+                            """, reply_markup=builder.as_markup())
 
-    await message.answer("""
-    Я бот расписания ПрИ 102, хули глаза вылупил?
-        """, reply_markup=builder.as_markup())
+
+@dp.message(F.text.lower() == "расписание на сегодня")
+async def Schedule1(message: types.Message, state: FSMContext):
+
+    try:
+        nomOfG = SQL.search_db(message.chat.id)
+    except:
+        nomOfG = 1
+        await bot.send_message(message.chat.id,"Произошла ошибка и я вывел расписание для 1 группы английского. Возможно тебя нет в базе данных, пропиши /start")
+
+    group = f"group_{nomOfG}"
+    week_type = NomOfWeek()
+    day = TTime.wtoday()
+    await bot.send_message(message.chat.id, f"{TEST.get_schedule(group, week_type, day)}")
+    # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
+
+@dp.message(F.text.lower() == "расписание на завтра")
+async def Schedule1(message: types.Message, state: FSMContext):
+
+    try:
+        nomOfG = SQL.search_db(message.chat.id)
+    except:
+        nomOfG = 1
+        await bot.send_message(message.chat.id,"Произошла ошибка и я вывел расписание для 1 группы английского. Возможно тебя нет в базе данных, пропиши /start")
+
+    group = f"group_{nomOfG}"
+    week_type = NomOfWeek(1)
+    day = TTime.wtomorrow()
+    await bot.send_message(message.chat.id, f"{TEST.get_schedule(group, week_type, day)}")
+    # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 @dp.message(F.text.lower() == "меню")
-async def menu(message: types.Message, state: FSMContext):
-    await state.clear()
-
+async def RU_Schedule1(message: types.Message, state: FSMContext):
 
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Изменить время", callback_data=NumbersCallbackFactory(action="update_time")
+        text="English", callback_data=NumbersCallbackFactory(action="EN")
     )
     builder.button(
-        text="Посмтреть рассписание", callback_data=NumbersCallbackFactory(action="check_schedule")
+        text="Изменить номер группы английского", callback_data=NumbersCallbackFactory(action="Next_step")
     )
+    await bot.send_message(message.chat.id, """
+МЕНЮ
+Тут ты можешь:
+Выбрать английский язык
+Изменить номер группы английского
+    """, reply_markup=builder.as_markup())
 
 
-    await bot.send_message(message.chat.id, """Меню""",reply_markup=builder.as_markup())
-    await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 @dp.callback_query(NumbersCallbackFactory.filter(F.action == "check_schedule"))
 async def check_schedule(
@@ -104,132 +154,256 @@ async def Next_step(
         callback: types.CallbackQuery,
         callback_data: NumbersCallbackFactory
 ):
-
     user_ID = callback.from_user.id
 
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Да", callback_data=NumbersCallbackFactory(action="Yea", user_ID=user_ID)
+        text="Я в 1-й группе английского", callback_data=NumbersCallbackFactory(action="first", user_ID=user_ID)#тут было Yea
     )
 
     builder.button(
-        text="Нет", callback_data=NumbersCallbackFactory(action="No", user_ID=user_ID)
+        text="Я во 2-й группе английского", callback_data=NumbersCallbackFactory(action="second", user_ID=user_ID)#тут было No
     )
 
-    await callback.message.edit_text("""Так, давай разберемся кое в чём.
-Я могу присылать тебе сообщение с расписанием автоматически в выбранное тобой время.
-     
-В независимости от твоего выбора ты всегда сам можешь изменить время отправки расписания и ПОСМОТРЕТЬ ЕГО САМ.
-
-Хочешь чтобы я сам присылал тебе уведомление?""", reply_markup = builder.as_markup())
+    await callback.message.edit_text("""В какой ты группе английского?""", reply_markup=builder.as_markup())
     await callback.answer()
 
 
-class Form(StatesGroup):
-    waiting_for_time = State()
-    waiting_for_Number = State()
-    waiting_for_update_time = State()
-
-
 # НУЖНО ДОБАВИТЬ ОЖИДАНИЕ ОТВЕТА!!!!
-@dp.callback_query(NumbersCallbackFactory.filter(F.action == "Yea"))
-async def Yea(
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "first"))
+async def first(
         callback: types.CallbackQuery,
         callback_data: NumbersCallbackFactory,
         state: FSMContext
 ):
-    user_ID = callback.from_user.id
-
-    await state.set_state(Form.waiting_for_time)
-    await callback.message.edit_text("""Отлично! введи время, в которое мне присылать тебе расписание, в 24-х формате ЧЧ:ММ.
-Например 20:31""")
-
-
-# принимаем текст
-@dp.message(Form.waiting_for_time)
-async def process_time(message: types.Message, state: FSMContext):
-    time = str(message.text.strip())
-    if CFG.is_valid_time(time) == True:
-        await bot.send_message(message.chat.id ,"Отлично, почти закончили! Введи номер своей группы по англискому")
-        await state.clear()
-        await state.update_data(user_time=time)
-        await state.set_state(Form.waiting_for_Number)
-
-
-    else:
-        print(False)
-
-
-@dp.message(Form.waiting_for_Number)
-async def process_time(message: types.Message, state: FSMContext):
-    group = message.text.strip()
-
     kb = [
-        [types.KeyboardButton(text="Меню")],
         [types.KeyboardButton(text="Расписание на сегодня")],
-        [types.KeyboardButton(text="Расписание на завтра")]
+        [types.KeyboardButton(text="Расписание на завтра")],
+        [types.KeyboardButton(text="Меню")]
     ]
     keyboard = types.ReplyKeyboardMarkup(
         keyboard=kb,
         resize_keyboard=True)
 
-
-    data = await state.get_data()
-    time = data.get('user_time')
-    await bot.send_message(message.chat.id, "записал тебя в списочек  ̶п̶и̶д̶о̶р̶а̶с̶о̶в̶, но пока только карандашом", reply_markup=keyboard)
-    SQL.add_user(message.chat.id, time, group)
-
+    await bot.send_message(callback.message.chat.id,
+                           """Отлично! Отныне я буду присылать тебе расписание с учетом твоей группы""",
+                           reply_markup=keyboard)
+    SQL.add_user(callback.message.chat.id, 1,"RU")
 
 
-@dp.callback_query(NumbersCallbackFactory.filter(F.action == "No"))
-async def No(
+    # SQL.add_user(message.chat.id, time, group)
+
+
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "second"))    #тут надо добавить в БД ID и группу англа
+async def second(
         callback: types.CallbackQuery,
         callback_data: NumbersCallbackFactory
 ):
     kb = [
-        [types.KeyboardButton(text="Меню")],
         [types.KeyboardButton(text="Расписание на сегодня")],
-        [types.KeyboardButton(text="Расписание на завтра")]
+        [types.KeyboardButton(text="Расписание на завтра")],
+        [types.KeyboardButton(text="Меню")]
     ]
     keyboard = types.ReplyKeyboardMarkup(
         keyboard=kb,
         resize_keyboard=True)
 
+    await bot.send_message(callback.message.chat.id,
+                           """Отлично! Отныне я буду присылать тебе расписание с учетом твоей группы""",
+                           reply_markup=keyboard)
+    SQL.add_user(callback.message.chat.id, 2, "RU")
 
-    await bot.delete_message(callback.message.chat.id, callback.message.message_id)
-    await bot.send_message(callback.message.chat.id,"""Окей, тогда просто введи 'меню', если захочешь чтоб я присылал тебе время""",
-                                     reply_markup=keyboard)
+
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN"))
+async def Change_number(
+        callback: types.CallbackQuery,
+        callback_data: NumbersCallbackFactory,
+):
+    nomOG = SQL.search_db(callback.message.chat.id)
+    SQL.add_user(callback.message.chat.id, nomOG, "EN")
+    kb = [
+        [types.KeyboardButton(text="Schedule for today")],
+        [types.KeyboardButton(text="Schedule for tomorrow")],
+        [types.KeyboardButton(text="Menu")]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True)
+
+    await bot.send_message(callback.message.chat.id, "Applied!", reply_markup=keyboard)
 
 
-@dp.callback_query(NumbersCallbackFactory.filter(F.action == "update_time"))
-async def update_time(
+
+#                                   EN
+#===============================================================================================
+#===============================================================================================
+#===============================================================================================
+#===============================================================================================
+
+@dp.message(F.text.lower() == "schedule for today")
+async def Schedule1(message: types.Message, state: FSMContext):
+    try:
+        nomOfG = SQL.search_db(message.chat.id)
+    except:
+        nomOfG = 1
+        await bot.send_message(message.chat.id,
+                               "An error occurred and I displayed the schedule for English Group 1. You may not be in the database; try /start.")
+
+    group = f"group_{nomOfG}"
+    week_type = NomOfWeek()
+    day = TTime.wtoday()
+    await bot.send_message(message.chat.id, f"{TEST.get_EN_schedule(group, week_type, day)}")
+    # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
+
+
+@dp.message(F.text.lower() == "schedule for tomorrow")
+async def Schedule1(message: types.Message, state: FSMContext):
+    try:
+        nomOfG = SQL.search_db(message.chat.id)
+    except:
+        nomOfG = 1
+        await bot.send_message(message.chat.id,
+                               "An error occurred and I displayed the schedule for English Group 1. You may not be in the database; type /start.")
+
+    group = f"group_{nomOfG}"
+    week_type = NomOfWeek(1)
+    day = TTime.wtomorrow()
+    await bot.send_message(message.chat.id, f"{TEST.get_EN_schedule(group, week_type, day)}")
+    # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
+
+
+@dp.message(F.text.lower() == "menu")
+async def EN_Schedule1(message: types.Message):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="Русский язык", callback_data=NumbersCallbackFactory(action="RU")
+    )
+    builder.button(
+        text="Change English group number", callback_data=NumbersCallbackFactory(action="EN_Next_step")
+    )
+    await bot.send_message(message.chat.id, """
+MENU
+Here you can:
+Switch language
+Change your English group number
+    """, reply_markup=builder.as_markup())
+
+
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_Change_number"))
+async def Change_number(
+        callback: types.CallbackQuery,
+        callback_data: NumbersCallbackFactory
+):
+    None
+
+
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_check_schedule"))
+async def check_schedule(
+        callback: types.CallbackQuery,
+        callback_data: NumbersCallbackFactory
+):
+    None
+
+
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_Next_step"))
+async def Next_step(
+        callback: types.CallbackQuery,
+        callback_data: NumbersCallbackFactory
+):
+    user_ID = callback.from_user.id
+
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="I'm in the 1st English group.", callback_data=NumbersCallbackFactory(action="EN_first", user_ID=user_ID)
+        # тут было Yea
+    )
+
+    builder.button(
+        text="I'm in the 2nd English group.", callback_data=NumbersCallbackFactory(action="EN_second", user_ID=user_ID)
+        # тут было No
+    )
+
+    await callback.message.edit_text("""What English group are you in?""", reply_markup=builder.as_markup())
+    await callback.answer()
+
+
+# class Form(StatesGroup):
+#     waiting_for_time = State()
+#     waiting_for_Number = State()
+#     waiting_for_update_time = State()
+
+
+# НУЖНО ДОБАВИТЬ ОЖИДАНИЕ ОТВЕТА!!!!
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_first"))
+async def first(
         callback: types.CallbackQuery,
         callback_data: NumbersCallbackFactory,
         state: FSMContext
 ):
-    await state.set_state(Form.waiting_for_update_time)
-    await bot.send_message(callback.message.chat.id,"""Введи время, в которое мне присылать тебе расписание, в 24-х формате ЧЧ:ММ.
-Например 20:31""")
+    kb = [
+        [types.KeyboardButton(text="Schedule for today")],
+        [types.KeyboardButton(text="Schedule for tomorrow")],
+        [types.KeyboardButton(text="Menu")]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True)
 
-
-@dp.message(Form.waiting_for_update_time)
-async def process_time(message: types.Message, state: FSMContext):
-    time = str(message.text.strip())
-    if CFG.is_valid_time(time) == True:
-        await bot.send_message(message.chat.id ,"Обновил время отправки")
-        await state.clear()
-        SQL.update_time(message.chat.id, time)
-
-
-    else:
-        print(False)
+    await bot.send_message(callback.message.chat.id,
+                           """Great! From now on, I'll send you a schedule tailored to your group.""",
+                           reply_markup=keyboard)
+    SQL.add_user(callback.message.chat.id, 1, "EN")
 
 
 
 
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_second"))  # тут надо добавить в БД ID и группу англа
+async def second(
+        callback: types.CallbackQuery,
+        callback_data: NumbersCallbackFactory
+):
+    SQL.add_user(callback.message.chat.id, 2, "EN")
+    kb = [
+        [types.KeyboardButton(text="Schedule for today")],
+        [types.KeyboardButton(text="Schedule for tomorrow")],
+        [types.KeyboardButton(text="Menu")]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True)
+
+    await bot.send_message(callback.message.chat.id,
+                           """Great! From now on, I'll send you a schedule tailored to your group.""",
+                           reply_markup=keyboard)
+
+
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "RU"))
+async def Change_number(
+        callback: types.CallbackQuery,
+        callback_data: NumbersCallbackFactory,
+):
+    nomOG = SQL.search_db(callback.message.chat.id)
+    SQL.add_user(callback.message.chat.id, nomOG, "RU")
+    kb = [
+        [types.KeyboardButton(text="Расписание на сегодня")],
+        [types.KeyboardButton(text="Расписание на завтра")],
+        [types.KeyboardButton(text="Меню")]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True)
+
+    await bot.send_message(callback.message.chat.id, "Применил!", reply_markup=keyboard)
+
+
+#===============================================================================================
+#===============================================================================================
+#===============================================================================================
+#===============================================================================================
 # Запуск процесса поллинга новых апдейтов
 async def main():
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

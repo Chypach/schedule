@@ -7,40 +7,60 @@ def create_table():
     cursor.execute("""CREATE TABLE IF NOT EXISTS db
     (
     user_id INTEGER PRIMARY KEY,
-    time INTEGER,
-    ENgroup INTEGER
+    ENgroup INTEGER,
+    lang TEXT
     )
     """)
     con.commit()
     con.close()
 
-def add_user(user_id, time, engroup):
+def add_user(user_id, engroup, lang):
     con = sqlite3.connect('db.db')
     cursor = con.cursor()
-    add = [user_id, time, engroup]
-    cursor.execute("INSERT INTO db VALUES(?,?,?);", add)
+    add = [user_id, engroup, lang]
+    cursor.execute("INSERT OR REPLACE INTO db VALUES(?,?,?);", add)
     con.commit()
     con.close()
 
 
-
-def update_time(user_id, time):
-    con = sqlite3.connect('db.db')
-    cursor = con.cursor()
-
-    cursor.execute("UPDATE db SET time = ? WHERE user_id = ?", (time, user_id))
-
-    con.commit()
-    con.close()
 
 def search_db(user_id):
     con = sqlite3.connect('db.db')
     cursor = con.cursor()
 
-    cursor.execute("SELECT * FROM db WHERE user_id = ?", (user_id,))
-    res = cursor.fetchall()
+    cursor.execute("SELECT ENgroup FROM db WHERE user_id = ?""", (user_id,))
+    res = cursor.fetchone()
 
     con.commit()
     con.close()
 
-    return res
+    return int(res[0])
+
+def search_lang(user_id):
+    con = sqlite3.connect('db.db')
+    cursor = con.cursor()
+
+    cursor.execute("SELECT lang FROM db WHERE user_id = ?""", (user_id,))
+    res = cursor.fetchone()
+
+    con.commit()
+    con.close()
+
+    return str(res[0])
+
+
+
+# def update_time(user_id, engroup):
+#     con = sqlite3.connect('db.db')
+#     cursor = con.cursor()
+#
+#     cursor.execute("UPDATE db SET engroup = ? WHERE user_id = ?", (engroup, user_id))
+#
+#     con.commit()
+#     con.close()
+
+
+# create_table()
+# add_user(1223,2)
+#
+# print(search_db(1223))

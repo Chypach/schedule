@@ -104,7 +104,9 @@ async def Schedule1(message: types.Message, state: FSMContext):
     group = f"group_{nomOfG}"
     week_type = NomOfWeek()
     day = TTime.wtoday()
-    await bot.send_message(message.chat.id, f"<blockquote>{TEST.get_schedule(group, week_type, day)}</blockquote>",parse_mode="HTML")
+
+    await bot.send_message(message.chat.id, f"""Расписание на сегодня {TTime.dataToday()}
+<blockquote>{TEST.get_schedule(group, week_type, day)}</blockquote>""",parse_mode="HTML")
     # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 @dp.message(F.text.lower() == "расписание на завтра")
@@ -119,8 +121,10 @@ async def Schedule1(message: types.Message, state: FSMContext):
     group = f"group_{nomOfG}"
     week_type = NomOfWeek(1)
     day = TTime.wtomorrow()
-    await bot.send_message(message.chat.id, f"<blockquote>{TEST.get_schedule(group, week_type, day)}</blockquote>",parse_mode="HTML")
-    # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
+
+    await bot.send_message(message.chat.id, f"""Расписание на завтра {TTime.datatomorrow()}
+<blockquote>{TEST.get_schedule(group, week_type, day)}</blockquote>""",parse_mode="HTML")
+
 
 @dp.message(F.text.lower() == "меню")
 async def Menu(message: types.Message, state: FSMContext):
@@ -136,14 +140,7 @@ async def Menu(message: types.Message, state: FSMContext):
         text="Расписание на всю неделю", callback_data=NumbersCallbackFactory(action="check_schedule")
     ).adjust(1)
     await bot.send_message(message.chat.id, """
-    <pre><code class="МЕНЮ">
             МЕНЮ
-        Тут ты можешь:
-- Выбрать английский язык
-
-- Изменить номер группы английского
-
-- Посмотреть расписание на всю неделю</code></pre>
         """, reply_markup=builder.as_markup(),parse_mode="HTML")
 
 
@@ -288,7 +285,8 @@ async def Schedule1(message: types.Message, state: FSMContext):
     group = f"group_{nomOfG}"
     week_type = NomOfWeek()
     day = TTime.wtoday()
-    await bot.send_message(message.chat.id, f"<blockquote>{TEST.get_EN_schedule(group, week_type, day)}</blockquote>",parse_mode="HTML")
+    await bot.send_message(message.chat.id, f"""Schedule for today {TTime.ENdataToday()} 
+<blockquote>{TEST.get_EN_schedule(group, week_type, day)}</blockquote>""",parse_mode="HTML")
     # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 
@@ -304,7 +302,8 @@ async def Schedule1(message: types.Message, state: FSMContext):
     group = f"group_{nomOfG}"
     week_type = NomOfWeek(1)
     day = TTime.wtomorrow()
-    await bot.send_message(message.chat.id, f"<blockquote>{TEST.get_EN_schedule(group, week_type, day)}</blockquote>",parse_mode="HTML")
+    await bot.send_message(message.chat.id, f"""Schedule for tomorrow {TTime.ENatatomorrow()}
+<blockquote>{TEST.get_EN_schedule(group, week_type, day)}</blockquote>""",parse_mode="HTML")
     # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 
@@ -320,12 +319,8 @@ async def EN_Schedule1(message: types.Message):
     builder.button(
         text="Schedule for the whole week", callback_data=NumbersCallbackFactory(action="EN_check_schedule")
     ).adjust(1)
-    await bot.send_message(message.chat.id, """<pre><code class="МЕНЮ">
+    await bot.send_message(message.chat.id, """
             MENU
-        Here you can:
-- Switch language
-- Change your English group number
-- View the schedule for the whole week
     """, reply_markup=builder.as_markup())
 
 

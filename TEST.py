@@ -27,12 +27,3 @@ def get_EN_schedule(group, week_type, day):
     except KeyError:
         return None
 
-
-# group = "group_1"
-# week_type = "odd_week"
-# day = "monday"
-#
-# lessons = get_schedule(group, week_type, day)
-# print(lessons)
-# for lesson in lessons:
-#     print(lesson)

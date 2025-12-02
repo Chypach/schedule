@@ -3,13 +3,13 @@ import asyncio
 from typing import Optional
 import logging
 import SQL
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.types import Message, labeled_price, pre_checkout_query, PreCheckoutQuery, LabeledPrice
+from aiogram.types import Message, labeled_price, pre_checkout_query, PreCheckoutQuery, LabeledPrice, \
+    InlineKeyboardMarkup
 from aiogram.filters.command import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiogram import Bot, Dispatcher, types
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton,InlineKeyboardButton
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 import tracemalloc
@@ -104,7 +104,7 @@ async def Schedule1(message: types.Message, state: FSMContext):
     group = f"group_{nomOfG}"
     week_type = NomOfWeek()
     day = TTime.wtoday()
-    await bot.send_message(message.chat.id, f"{TEST.get_schedule(group, week_type, day)}")
+    await bot.send_message(message.chat.id, f"<blockquote>{TEST.get_schedule(group, week_type, day)}</blockquote>",parse_mode="HTML")
     # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 @dp.message(F.text.lower() == "расписание на завтра")
@@ -119,25 +119,33 @@ async def Schedule1(message: types.Message, state: FSMContext):
     group = f"group_{nomOfG}"
     week_type = NomOfWeek(1)
     day = TTime.wtomorrow()
-    await bot.send_message(message.chat.id, f"{TEST.get_schedule(group, week_type, day)}")
+    await bot.send_message(message.chat.id, f"<blockquote>{TEST.get_schedule(group, week_type, day)}</blockquote>",parse_mode="HTML")
     # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 @dp.message(F.text.lower() == "меню")
-async def RU_Schedule1(message: types.Message, state: FSMContext):
+async def Menu(message: types.Message, state: FSMContext):
 
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="English", callback_data=NumbersCallbackFactory(action="EN")
+        text="🇺🇸 English", callback_data=NumbersCallbackFactory(action="EN")
     )
     builder.button(
         text="Изменить номер группы английского", callback_data=NumbersCallbackFactory(action="Next_step")
     )
+    builder.button(
+        text="Расписание на всю неделю", callback_data=NumbersCallbackFactory(action="check_schedule")
+    ).adjust(1)
     await bot.send_message(message.chat.id, """
-МЕНЮ
-Тут ты можешь:
-Выбрать английский язык
-Изменить номер группы английского
-    """, reply_markup=builder.as_markup())
+    <pre><code class="МЕНЮ">
+            МЕНЮ
+        Тут ты можешь:
+- Выбрать английский язык
+
+- Изменить номер группы английского
+
+- Посмотреть расписание на всю неделю</code></pre>
+        """, reply_markup=builder.as_markup(),parse_mode="HTML")
+
 
 
 
@@ -146,7 +154,35 @@ async def check_schedule(
         callback: types.CallbackQuery,
         callback_data: NumbersCallbackFactory
 ):
-    None
+
+    try:
+        nomOfG = SQL.search_db(callback.message.chat.id)
+    except:
+        nomOfG = 1
+        await bot.send_message(callback.message.chat.id,"Произошла ошибка и я вывел расписание для 1 группы английского. Возможно тебя нет в базе данных, пропиши /start")
+
+    group = f"group_{nomOfG}"
+    week_type = NomOfWeek()
+    await bot.send_message(callback.message.chat.id, f"""
+<blockquote expandable>Понедельник
+{TEST.get_schedule(group,week_type,"monday")}
+</blockquote>
+<blockquote expandable>Вторник
+{TEST.get_schedule(group,week_type,"tuesday")}
+</blockquote>
+<blockquote expandable>Среда
+{TEST.get_schedule(group,week_type,"wednesday")}
+</blockquote>
+<blockquote expandable>Четверг
+{TEST.get_schedule(group,week_type,"thursday")}
+</blockquote>
+<blockquote expandable>Пятница
+{TEST.get_schedule(group,week_type,"friday")}
+</blockquote>
+<blockquote expandable>Суббота
+{TEST.get_schedule(group,week_type,"saturday")}
+</blockquote>
+    """,parse_mode="HTML")
 
 
 @dp.callback_query(NumbersCallbackFactory.filter(F.action == "Next_step"))
@@ -163,7 +199,7 @@ async def Next_step(
 
     builder.button(
         text="Я во 2-й группе английского", callback_data=NumbersCallbackFactory(action="second", user_ID=user_ID)#тут было No
-    )
+    ).adjust(1)
 
     await callback.message.edit_text("""В какой ты группе английского?""", reply_markup=builder.as_markup())
     await callback.answer()
@@ -252,7 +288,7 @@ async def Schedule1(message: types.Message, state: FSMContext):
     group = f"group_{nomOfG}"
     week_type = NomOfWeek()
     day = TTime.wtoday()
-    await bot.send_message(message.chat.id, f"{TEST.get_EN_schedule(group, week_type, day)}")
+    await bot.send_message(message.chat.id, f"<blockquote>{TEST.get_EN_schedule(group, week_type, day)}</blockquote>",parse_mode="HTML")
     # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 
@@ -268,7 +304,7 @@ async def Schedule1(message: types.Message, state: FSMContext):
     group = f"group_{nomOfG}"
     week_type = NomOfWeek(1)
     day = TTime.wtomorrow()
-    await bot.send_message(message.chat.id, f"{TEST.get_EN_schedule(group, week_type, day)}")
+    await bot.send_message(message.chat.id, f"<blockquote>{TEST.get_EN_schedule(group, week_type, day)}</blockquote>",parse_mode="HTML")
     # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 
@@ -276,16 +312,20 @@ async def Schedule1(message: types.Message, state: FSMContext):
 async def EN_Schedule1(message: types.Message):
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Русский язык", callback_data=NumbersCallbackFactory(action="RU")
+        text="🇷🇺 Русский язык", callback_data=NumbersCallbackFactory(action="RU")
     )
     builder.button(
         text="Change English group number", callback_data=NumbersCallbackFactory(action="EN_Next_step")
     )
-    await bot.send_message(message.chat.id, """
-MENU
-Here you can:
-Switch language
-Change your English group number
+    builder.button(
+        text="Schedule for the whole week", callback_data=NumbersCallbackFactory(action="EN_check_schedule")
+    ).adjust(1)
+    await bot.send_message(message.chat.id, """<pre><code class="МЕНЮ">
+            MENU
+        Here you can:
+- Switch language
+- Change your English group number
+- View the schedule for the whole week
     """, reply_markup=builder.as_markup())
 
 
@@ -297,12 +337,41 @@ async def Change_number(
     None
 
 
+
 @dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_check_schedule"))
 async def check_schedule(
         callback: types.CallbackQuery,
         callback_data: NumbersCallbackFactory
 ):
-    None
+
+    try:
+        nomOfG = SQL.search_db(callback.message.chat.id)
+    except:
+        nomOfG = 1
+        await bot.send_message(callback.message.chat.id,"An error occurred and I displayed the schedule for English Group 1. You may not be in the database; type /start.")
+
+    group = f"group_{nomOfG}"
+    week_type = NomOfWeek()
+    await bot.send_message(callback.message.chat.id, f"""
+<blockquote expandable>monday
+{TEST.get_EN_schedule(group,week_type,"monday")}
+</blockquote>
+<blockquote expandable>tuesday
+{TEST.get_EN_schedule(group,week_type,"tuesday")}
+</blockquote>
+<blockquote expandable>wednesday
+{TEST.get_EN_schedule(group,week_type,"wednesday")}
+</blockquote>
+<blockquote expandable>thursday
+{TEST.get_EN_schedule(group,week_type,"thursday")}
+</blockquote>
+<blockquote expandable>friday
+{TEST.get_EN_schedule(group,week_type,"friday")}
+</blockquote>
+<blockquote expandable>saturday
+{TEST.get_EN_schedule(group,week_type,"saturday")}
+</blockquote>
+    """,parse_mode="HTML")
 
 
 @dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_Next_step"))
@@ -319,7 +388,7 @@ async def Next_step(
     )
 
     builder.button(
-        text="I'm in the 2nd English group.", callback_data=NumbersCallbackFactory(action="EN_second", user_ID=user_ID)
+        text="I'm in the 2nd English group.", callback_data=NumbersCallbackFactory(action="EN_second", user_ID=user_ID).adjust(1)
         # тут было No
     )
 

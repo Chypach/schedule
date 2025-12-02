@@ -30,21 +30,3 @@ def TodayYear():
     today = datetime.date.today()
     today = f"{today:%j}"
     return today
-#
-# def job():
-#     global Nomber_of_weak
-#     if Nomber_of_weak == 1:
-#         Nomber_of_weak += 1
-#         print(Nomber_of_weak)
-#     elif Nomber_of_weak == 2:
-#         Nomber_of_weak -= 1
-#         print(Nomber_of_weak)
-
-#
-# Nomber_of_weak = 2
-# schedule.every().seconds.do(job)
-# schedule.every().sunday.at("00:00").do(job)
-
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)

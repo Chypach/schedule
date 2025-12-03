@@ -47,20 +47,3 @@ def search_lang(user_id):
     con.close()
 
     return str(res[0])
-
-
-
-# def update_time(user_id, engroup):
-#     con = sqlite3.connect('db.db')
-#     cursor = con.cursor()
-#
-#     cursor.execute("UPDATE db SET engroup = ? WHERE user_id = ?", (engroup, user_id))
-#
-#     con.commit()
-#     con.close()
-
-
-# create_table()
-# add_user(1223,2)
-#
-# print(search_db(1223))

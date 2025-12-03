@@ -1,7 +1,6 @@
 from datetime import datetime, timezone, timedelta
 import datetime
 from zoneinfo import ZoneInfo
-import schedule
 import time
 
 w = [("понедельник"), ("вторник"), ("среда"), ("четверг"), ("пятница"), ("суббота"), ("воскресенье"), ("понедельник")]
@@ -9,40 +8,42 @@ w2 = [("monday"), ("tuesday"), ("wednesday"), ("thursday"), ("friday"), ("saturd
 Chel = timezone(timedelta(hours=5), "Челябинск")
 
 
-dt = datetime.datetime.today()
-dt1 = datetime.datetime.today() + timedelta(days=1)
-
-# print("время сейчас",dt)
-# dt = datetime.datetime.now(Chel)
-# print("время сейчас",dt)
-# print("сегодня",dt.year, dt.month, dt.day)
-
-# print(dt.hour, dt.minute, dt.second)
-res = datetime.date(dt.year, dt.month, dt.day)
-
 def wtoday():
+    dt = datetime.datetime.today()
+    res = datetime.date(dt.year, dt.month, dt.day)
     return w2[res.weekday()]
 def wtomorrow():
+    dt = datetime.datetime.today()
+    res = datetime.date(dt.year, dt.month, dt.day)
     return w2[res.isoweekday()]
 
 def RUtoday():
+    dt = datetime.datetime.today()
+    res = datetime.date(dt.year, dt.month, dt.day)
     return w[res.weekday()]
 def RUtomorrow():
+    dt = datetime.datetime.today()
+    res = datetime.date(dt.year, dt.month, dt.day)
     return w[res.isoweekday()]
 
 
 
 def dataToday():
+    dt = datetime.datetime.today()
+    res = datetime.date(dt.year, dt.month, dt.day)
     f = f"({dt.year},{dt.month},{dt.day}), {RUtoday()}:"
     return f
 def datatomorrow():
+    dt1 = datetime.datetime.today() + timedelta(days=1)
     f = f"({dt1.year},{dt1.month},{dt1.day}), {RUtomorrow()}:"
     return f
 
 def ENdataToday():
+    dt = datetime.datetime.today()
     f = f"({dt.year},{dt.month},{dt.day}), {wtoday()}:"
     return f
 def ENatatomorrow():
+    dt1 = datetime.datetime.today() + timedelta(days=1)
     f = f"({dt1.year},{dt1.month},{dt1.day}), {wtomorrow()}:"
     return f
 
@@ -52,5 +53,4 @@ def TodayYear():
     return today
 
 
-print(dataToday())
 

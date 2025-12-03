@@ -3,25 +3,19 @@ import asyncio
 from typing import Optional
 import logging
 import SQL
-from aiogram.types import Message, labeled_price, pre_checkout_query, PreCheckoutQuery, LabeledPrice, \
-    InlineKeyboardMarkup
 from aiogram.filters.command import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton,InlineKeyboardButton
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 import tracemalloc
 
 import TEST
 import TTime
 from EvenOddWeek import NomOfWeek
 
-# Включить отслеживание распределения памяти
-tracemalloc.start()
 
-# Установите ограничение на количество кадров в трассировке (опционально)
+tracemalloc.start()
 tracemalloc.START_FRAMES_COUNT = 10
 # ----------------------------------------------------------------------------
 #
@@ -35,15 +29,9 @@ tracemalloc.START_FRAMES_COUNT = 10
 # ----------------------------------------------------------------------------
 
 
-# + добавить БД
-# НУЖНО ДОБАВИТЬ ОЖИДАНИЕ ОТВЕТА!!!!
-# смену недели
-# 1-я или 2-я группа англа
-
-
-logging.basicConfig(level=logging.INFO)  # Включаем логирование, чтобы не пропустить важные сообщения
-bot = Bot(CFG.BOT_TOKEN)  # Объект бота
-dp = Dispatcher()  # Диспетчер
+logging.basicConfig(level=logging.INFO)
+bot = Bot(CFG.BOT_TOKEN)
+dp = Dispatcher()
 
 
 class NumbersCallbackFactory(CallbackData, prefix="f"):
@@ -107,7 +95,6 @@ async def Schedule1(message: types.Message, state: FSMContext):
 
     await bot.send_message(message.chat.id, f"""Расписание на сегодня {TTime.dataToday()}
 <blockquote>{TEST.get_schedule(group, week_type, day)}</blockquote>""",parse_mode="HTML")
-    # await bot.send_message(message.chat.id, f"{Schedule_1W_1_group.Monday_1()}")
 
 @dp.message(F.text.lower() == "расписание на завтра")
 async def Schedule1(message: types.Message, state: FSMContext):
@@ -191,18 +178,17 @@ async def Next_step(
 
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Я в 1-й группе английского", callback_data=NumbersCallbackFactory(action="first", user_ID=user_ID)#тут было Yea
+        text="Я в 1-й группе английского", callback_data=NumbersCallbackFactory(action="first", user_ID=user_ID)
     )
 
     builder.button(
-        text="Я во 2-й группе английского", callback_data=NumbersCallbackFactory(action="second", user_ID=user_ID)#тут было No
+        text="Я во 2-й группе английского", callback_data=NumbersCallbackFactory(action="second", user_ID=user_ID)
     ).adjust(1)
 
     await callback.message.edit_text("""В какой ты группе английского?""", reply_markup=builder.as_markup())
     await callback.answer()
 
 
-# НУЖНО ДОБАВИТЬ ОЖИДАНИЕ ОТВЕТА!!!!
 @dp.callback_query(NumbersCallbackFactory.filter(F.action == "first"))
 async def first(
         callback: types.CallbackQuery,
@@ -224,10 +210,9 @@ async def first(
     SQL.add_user(callback.message.chat.id, 1,"RU")
 
 
-    # SQL.add_user(message.chat.id, time, group)
 
 
-@dp.callback_query(NumbersCallbackFactory.filter(F.action == "second"))    #тут надо добавить в БД ID и группу англа
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "second"))
 async def second(
         callback: types.CallbackQuery,
         callback_data: NumbersCallbackFactory
@@ -379,25 +364,20 @@ async def Next_step(
     builder = InlineKeyboardBuilder()
     builder.button(
         text="I'm in the 1st English group.", callback_data=NumbersCallbackFactory(action="EN_first", user_ID=user_ID)
-        # тут было Yea
+
     )
 
     builder.button(
-        text="I'm in the 2nd English group.", callback_data=NumbersCallbackFactory(action="EN_second", user_ID=user_ID).adjust(1)
-        # тут было No
-    )
+        text="I'm in the 2nd English group.", callback_data=NumbersCallbackFactory(action="EN_second", user_ID=user_ID)
+
+    ).adjust(1)
 
     await callback.message.edit_text("""What English group are you in?""", reply_markup=builder.as_markup())
     await callback.answer()
 
 
-# class Form(StatesGroup):
-#     waiting_for_time = State()
-#     waiting_for_Number = State()
-#     waiting_for_update_time = State()
 
 
-# НУЖНО ДОБАВИТЬ ОЖИДАНИЕ ОТВЕТА!!!!
 @dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_first"))
 async def first(
         callback: types.CallbackQuery,
@@ -421,7 +401,7 @@ async def first(
 
 
 
-@dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_second"))  # тут надо добавить в БД ID и группу англа
+@dp.callback_query(NumbersCallbackFactory.filter(F.action == "EN_second"))
 async def second(
         callback: types.CallbackQuery,
         callback_data: NumbersCallbackFactory
@@ -464,7 +444,7 @@ async def Change_number(
 #===============================================================================================
 #===============================================================================================
 #===============================================================================================
-# Запуск процесса поллинга новых апдейтов
+
 async def main():
     await dp.start_polling(bot)
 
